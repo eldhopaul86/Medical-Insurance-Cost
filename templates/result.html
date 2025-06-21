@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result - Insurance Charge Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 25%, #2d1b69 50%, #1a1a1a 75%, #0f0f0f 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            color: #ffffff;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 100px rgba(45, 27, 105, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2d1b69 0%, #1a0a3e 50%, #000000 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(76, 175, 80, 0.2) 0%, transparent 70%);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(45deg, #4caf50, #45a049, #66bb6a, #81c784);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        .header p {
+            position: relative;
+            z-index: 1;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .content {
+            padding: 40px;
+            background: rgba(20, 20, 20, 0.8);
+        }
+        
+        .prediction-card {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 50%, #2e7d32 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(76, 175, 80, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .prediction-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+        
+        .prediction-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .prediction-label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .model-info {
+            background: rgba(40, 40, 40, 0.6);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .model-info h3 {
+            color: #e0e0e0;
+            margin-bottom: 10px;
+        }
+        
+        .model-info p {
+            color: #b0b0b0;
+        }
+        
+        .input-summary {
+            background: rgba(30, 60, 114, 0.3);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(78, 205, 196, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-summary h3 {
+            color: #4ecdc4;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .input-item {
+            background: rgba(40, 40, 40, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #4ecdc4;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .input-item strong {
+            display: block;
+            color: #4ecdc4;
+            margin-bottom: 5px;
+        }
+        
+        .input-item span {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+        }
+        
+        .actions {
+            text-align: center;
+            gap: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8a2be2 0%, #4b0082 50%, #2d1b69 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #555 0%, #333 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
+        }
+        
+        .interpretation {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .interpretation h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        
+        .interpretation p {
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .prediction-amount {
+                font-size: 2.5rem;
+            }
+            
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Prediction Complete!</h1>
+            <p>Your insurance charge prediction is ready</p>
+        </div>
+        
+        <div class="content">
+            <div class="prediction-card">
+                <div class="prediction-amount">{{ prediction_inr }}</div>
+                <div class="prediction-label">Estimated Annual Insurance Charges</div>
+            </div>
+            
+            <div class="model-info">
+                <h3>🤖 Model Used: {{ model_name }}</h3>
+                <p>This prediction was generated using the {{ model_name }} algorithm</p>
+            </div>
+            
+            <div class="interpretation">
+                <h4>💡 Understanding Your Prediction</h4>
+                <p>
+                    {% if prediction < 5000 %}
+                    Your predicted insurance charges are relatively low. This typically indicates lower risk factors such as younger age, healthy BMI, non-smoking status, and fewer dependents.
+                    {% elif prediction < 15000 %}
+                    Your predicted insurance charges are moderate. This suggests a balanced risk profile with some factors that may increase costs.
+                    {% elif prediction < 30000 %}
+                    Your predicted insurance charges are above average. This may be due to factors like smoking, higher BMI, older age, or multiple dependents.
+                    {% else %}
+                    Your predicted insurance charges are quite high. This typically indicates higher risk factors such as smoking, advanced age, or other health-related considerations.
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="input-summary">
+                <h3>📋 Your Input Summary</h3>
+                <div class="input-grid">
+                    <div class="input-item">
+                        <strong>Age</strong>
+                        <span>{{ input_data.age }} years</span>
+                    </div>
+                    <div class="input-item">
+                        <strong>Gender</strong>
+                        <span>{{ input_data.sex.title() }}</span>
+                    </div>
+                    <div class="input-item">
+                        <strong>BMI</strong>
+                        <span>{{ input_data.bmi }}</span>
+                    </div>
+                    <div class="input-item">
+                        <strong>Children</strong>
+                        <span>{{ input_data.children }}</span>
+                    </div>
+                    <div class="input-item">
+                        <strong>Smoking Status</strong>
+                        <span>{{ 'Smoker' if input_data.smoker == 'yes' else 'Non-Smoker' }}</span>
+                    </div>
+                    <div class="input-item">
+                        <strong>Region</strong>
+                        <span>{{ input_data.region.title() }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <a href="/" class="btn btn-primary">🔄 Make Another Prediction</a>
+                <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Results</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Add some animation when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const predictionCard = document.querySelector('.prediction-card');
+        const amount = document.querySelector('.prediction-amount');
+        
+        // Extract the final amount from the template (remove ₹ and commas)
+        const finalAmountText = "{{ prediction_inr }}".replace(/[₹,]/g, '');
+        const finalAmount = parseFloat(finalAmountText);
+        
+        if (!isNaN(finalAmount)) {
+            let currentAmount = 0;
+            const increment = finalAmount / 50;
+            
+            const animation = setInterval(() => {
+                currentAmount += increment;
+                if (currentAmount >= finalAmount) {
+                    currentAmount = finalAmount;
+                    clearInterval(animation);
+                }
+                amount.textContent = '₹' + Math.round(currentAmount).toLocaleString();
+            }, 30);
+        }
+        
+        // Add subtle floating animation to cards
+        const cards = document.querySelectorAll('.input-item');
+        cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+            card.style.animation = 'float 6s ease-in-out infinite';
+        });
+    });
+    
+    // Add floating animation keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+</body>
+</html>
